@@ -1,2 +1,82 @@
 <h1>HELLO<h1>
 <img src="S__114532359.jpg" height="100">
+
+# 在 Google Colab 安裝必要套件（可忽略 if 已安裝）
+!pip install plotly dash
+
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+
+# 範例資料
+z_score = 1.73  # Z-Score 值
+quarters = [1, 2, 3, 4, 5, 6]  # 過去六季
+closure_prob = [5, 8, 12, 16, 19, 22]  # 倒閉機率 (%)
+
+# 使用 2x2 子圖布局 (上排兩圖，下排用於文字註解定位)
+fig = make_subplots(
+    rows=2, cols=2,
+    specs=[[{"type": "domain"}, {"type": "xy"}],
+           [{"type": "domain"}, {"type": "domain"}]],
+    subplot_titles=("Z-Score 速度錶", "倒閉機率趨勢", "", "")
+)
+
+# 1. Z-Score 速度錶 (Gauge Chart)
+fig.add_trace(go.Indicator(
+    mode="gauge+number",
+    value=z_score,
+    title={'text': "Z-Score", 'font': {'size': 16}},
+    gauge={
+        'axis': {'range': [0, 6]},  # 設定量尺上限
+        'bar': {'color': "black"},
+        'steps': [
+            {'range': [0, 1.8], 'color': "red"},
+            {'range': [1.8, 3.0], 'color': "yellow"},
+            {'range': [3.0, 6], 'color': "green"}
+        ],
+        'threshold': {
+            'line': {'color': "red", 'width': 4},
+            'thickness': 0.75,
+            'value': 1.8  # 高風險閾值
+        }
+    }
+), row=1, col=1)
+
+# 2. 倒閉機率趨勢折線圖 (Line Chart)
+fig.add_trace(go.Scatter(
+    x=quarters,
+    y=closure_prob,
+    mode="lines+markers",
+    line={'color': 'blue'},
+    marker={'size': 8},
+    name="倒閉機率 (%)"
+), row=1, col=2)
+
+# 3. 建議提示卡片 (Annotation)
+fig.add_annotation(
+    x=0.25, y=-0.1, xref="paper", yref="paper",
+    text="⚠️ 建議：立即檢視應收帳款回收速度，並減少短期借款。",
+    showarrow=False,
+    font={'size': 14},
+    bgcolor="rgba(255, 255, 204, 0.9)",
+    bordercolor="black"
+)
+
+# 4. 紅/黃/綠風險提示 (Legend Annotation)
+legend_text = ("🟢 綠燈：Z-Score > 3.0（安全）<br>"
+               "🟡 黃燈：Z-Score 1.8–3.0（注意）<br>"
+               "🔴 紅燈：Z-Score < 1.8（高風險）")
+fig.add_annotation(
+    x=0.75, y=-0.1, xref="paper", yref="paper",
+    text=legend_text,
+    showarrow=False,
+    font={'size': 14},
+    align="left"
+)
+
+# 佈局設定
+fig.update_layout(
+    title_text="綜合視覺化儀表板示例",
+    height=600,
+    margin={'t': 50, 'b': 120}  # 底部留空給註解
+)
+fig.show()
